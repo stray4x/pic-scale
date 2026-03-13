@@ -2,11 +2,10 @@
   "name": "pic-scale",
   "private": true,
   "scripts": {
-    "build": "turbo run build",
     "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "check-types": "turbo run check-types"
+    "dev:front": "turbo run dev --filter=frontend",
+    "dev:back": "turbo run dev --filter=backend",
+    "build": "turbo run build"
   },
   "devDependencies": {
     "prettier": "^3.7.4",
