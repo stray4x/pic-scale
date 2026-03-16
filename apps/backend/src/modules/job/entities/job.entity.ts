@@ -20,8 +20,8 @@ export class JobEntity extends BaseEntity {
   originalStorageKey: string;
 
   @Column({ nullable: true })
-  resultStorageKey: string | null;
+  resultStorageKey: string;
 
   @Column({ nullable: true })
-  errorMessage: string | null;
+  errorMessage: string;
 }
