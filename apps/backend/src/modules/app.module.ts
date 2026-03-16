@@ -5,6 +5,7 @@ import { typeOrmConfig } from 'src/config/typeorm.config';
 import { ConfigModule } from '@nestjs/config';
 import { envValidationSchema } from 'src/config/env.config';
 import { JobModule } from './job/job.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { JobModule } from './job/job.module';
     }),
     TypeOrmModule.forRootAsync(typeOrmConfig),
     JobModule,
+    UploadModule,
   ],
   controllers: [AppController],
 })
