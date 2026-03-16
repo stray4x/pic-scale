@@ -10,8 +10,6 @@ const mockJob: JobEntity = {
   status: JobStatus.PENDING,
   originalFilename: 'photo.jpg',
   originalStorageKey: 'originals/test-uuid.jpg',
-  resultStorageKey: null,
-  errorMessage: null,
   createdAt: new Date(),
   updatedAt: new Date(),
 };
