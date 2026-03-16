@@ -6,6 +6,8 @@ import { ConfigModule } from '@nestjs/config';
 import { envValidationSchema } from 'src/config/env.config';
 import { JobModule } from './job/job.module';
 import { UploadModule } from './upload/upload.module';
+import { BullModule } from '@nestjs/bullmq';
+import { bullMqConfig } from 'src/config/bullmq.config';
 
 @Module({
   imports: [
@@ -14,6 +16,7 @@ import { UploadModule } from './upload/upload.module';
       validationSchema: envValidationSchema,
     }),
     TypeOrmModule.forRootAsync(typeOrmConfig),
+    BullModule.forRootAsync(bullMqConfig),
     JobModule,
     UploadModule,
   ],
