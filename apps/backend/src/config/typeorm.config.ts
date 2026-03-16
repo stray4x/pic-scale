@@ -12,7 +12,7 @@ export const typeOrmConfig: TypeOrmModuleAsyncOptions = {
     username: config.get(env.DB_USERNAME),
     password: config.get(env.DB_PASSWORD),
     database: config.get(env.DB_NAME),
-    entities: [],
+    autoLoadEntities: true,
     synchronize: true, // todo: only dev
   }),
 };
