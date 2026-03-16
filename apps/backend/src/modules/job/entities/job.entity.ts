@@ -9,7 +9,7 @@ export enum JobStatus {
 }
 
 @Entity('jobs')
-export class Job extends BaseEntity {
+export class JobEntity extends BaseEntity {
   @Column({ type: 'enum', enum: JobStatus, default: JobStatus.PENDING })
   status: JobStatus;
 
