@@ -1,0 +1,27 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pic-scale-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: pic_scale
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  pgweb:
+    image: sosedoff/pgweb
+    container_name: pic-scale-pgweb
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://postgres:postgres123@postgres:5432/pic_scale?sslmode=disable
+    ports:
+      - '8081:8081'
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:

@@ -1,0 +1,18 @@
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { typeOrmConfig } from 'src/config/typeorm.config';
+import { ConfigModule } from '@nestjs/config';
+import { envValidationSchema } from 'src/config/env.config';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validationSchema: envValidationSchema,
+    }),
+    TypeOrmModule.forRootAsync(typeOrmConfig),
+  ],
+  controllers: [AppController],
+})
+export class AppModule {}
