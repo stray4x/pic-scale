@@ -8,6 +8,7 @@ import { JobModule } from './job/job.module';
 import { UploadModule } from './upload/upload.module';
 import { BullModule } from '@nestjs/bullmq';
 import { bullMqConfig } from 'src/config/bullmq.config';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { bullMqConfig } from 'src/config/bullmq.config';
     BullModule.forRootAsync(bullMqConfig),
     JobModule,
     UploadModule,
+    StorageModule,
   ],
   controllers: [AppController],
 })
