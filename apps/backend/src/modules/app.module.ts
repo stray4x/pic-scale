@@ -9,6 +9,7 @@ import { UploadModule } from './upload/upload.module';
 import { BullModule } from '@nestjs/bullmq';
 import { bullMqConfig } from 'src/config/bullmq.config';
 import { StorageModule } from './storage/storage.module';
+import { UpscalerModule } from './upscaler/upscaler.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { StorageModule } from './storage/storage.module';
     JobModule,
     UploadModule,
     StorageModule,
+    UpscalerModule,
   ],
   controllers: [AppController],
 })

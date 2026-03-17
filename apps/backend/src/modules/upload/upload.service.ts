@@ -16,14 +16,14 @@ export class UploadService {
     @Inject(STORAGE_PORT) private readonly storage: StoragePort,
   ) {}
 
-  async uploadAndEnqueue(file: Express.Multer.File) {
+  async uploadAndEnqueue(file: Express.Multer.File, scale: number) {
     const key = `originals/${randomUUID()}-${file.originalname}`;
 
     await this.storage.upload(file.buffer, key, file.mimetype);
 
-    const job = await this.jobService.create(file.originalname, key);
+    const job = await this.jobService.create(file.originalname, key, scale);
 
-    await this.upscaleQueue.add('upscale', { jobId: job.id });
+    await this.upscaleQueue.add('upscale', { jobId: job.id, scale });
     this.logger.log(`Job ${job.id} added to queue`);
 
     return { jobId: job.id };

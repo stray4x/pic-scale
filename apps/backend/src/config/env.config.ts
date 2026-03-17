@@ -22,6 +22,5 @@ export const envValidationSchema = Joi.object({
   [env.S3_BUCKET]: Joi.string(),
   [env.S3_REGION]: Joi.string(),
 
-  [env.UPSCALE_FACTOR]: Joi.number().min(2).max(8),
   [env.REALESRGAN_EXECUTABLE]: Joi.string(),
 }).fork(Object.values(env), (schema) => schema.required());

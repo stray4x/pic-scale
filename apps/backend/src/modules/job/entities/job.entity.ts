@@ -13,6 +13,9 @@ export class JobEntity extends BaseEntity {
   @Column({ type: 'enum', enum: JobStatus, default: JobStatus.PENDING })
   status: JobStatus;
 
+  @Column({ type: 'int' })
+  scale: number;
+
   @Column()
   originalFilename: string;
 

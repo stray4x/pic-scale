@@ -13,10 +13,12 @@ export class JobService {
   async create(
     originalFilename: string,
     originalStorageKey: string,
+    scale: number,
   ): Promise<JobEntity> {
     const job = this.jobRepository.create({
       originalFilename,
       originalStorageKey,
+      scale,
     });
 
     return this.jobRepository.save(job);
