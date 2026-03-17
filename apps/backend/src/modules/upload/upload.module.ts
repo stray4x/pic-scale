@@ -4,9 +4,14 @@ import { UploadController } from './upload.controller';
 import { JobModule } from '../job/job.module';
 import { BullModule } from '@nestjs/bullmq';
 import { queues } from 'src/common/constants/queues';
+import { StorageModule } from '../storage/storage.module';
 
 @Module({
-  imports: [JobModule, BullModule.registerQueue({ name: queues.UPSCALE })],
+  imports: [
+    JobModule,
+    StorageModule,
+    BullModule.registerQueue({ name: queues.UPSCALE }),
+  ],
   controllers: [UploadController],
   providers: [UploadService],
 })
