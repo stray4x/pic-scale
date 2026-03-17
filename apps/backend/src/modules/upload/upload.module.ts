@@ -10,7 +10,14 @@ import { StorageModule } from '../storage/storage.module';
   imports: [
     JobModule,
     StorageModule,
-    BullModule.registerQueue({ name: queues.UPSCALE }),
+    BullModule.registerQueue({
+      name: queues.UPSCALE,
+      defaultJobOptions: {
+        removeOnComplete: 10,
+        removeOnFail: 10,
+        attempts: 3,
+      },
+    }),
   ],
   controllers: [UploadController],
   providers: [UploadService],
