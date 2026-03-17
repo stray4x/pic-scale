@@ -10,6 +10,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { bullMqConfig } from 'src/config/bullmq.config';
 import { StorageModule } from './storage/storage.module';
 import { UpscalerModule } from './upscaler/upscaler.module';
+import { UpscaleWorker } from 'src/workers/upscale.worker';
 
 @Module({
   imports: [
@@ -25,5 +26,6 @@ import { UpscalerModule } from './upscaler/upscaler.module';
     UpscalerModule,
   ],
   controllers: [AppController],
+  providers: [UpscaleWorker],
 })
 export class AppModule {}
