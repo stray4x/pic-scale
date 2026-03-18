@@ -1,4 +1,6 @@
 import { useState, useRef, useCallback } from "react";
+import { uploadImage } from "../api/api";
+import { useJobSocket, type JobUpdate } from "../hooks/useJobSocket";
 
 interface ImageInfo {
   src: string;
@@ -16,30 +18,63 @@ interface ScaleOption {
 const SCALE_OPTIONS: ScaleOption[] = [
   { label: "2x", value: 2 },
   { label: "4x", value: 4 },
-  { label: "8x", value: 8 },
 ];
 
 export default function Upscaler() {
   const [image, setImage] = useState<ImageInfo | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [scale, setScale] = useState<number>(2);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [resultUrl, setResultUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const loadImageFile = (file: File | undefined): void => {
-    if (!file || !file.type.startsWith("image/")) return;
-    const url = URL.createObjectURL(file);
+  useJobSocket(jobId, (update: JobUpdate) => {
+    if (update.status === "done" && update.resultUrl) {
+      setResultUrl(update.resultUrl);
+      setIsLoading(false);
+      setJobId(null);
+    } else if (update.status === "failed") {
+      setError(update.errorMessage ?? "Processing failed");
+      setIsLoading(false);
+      setJobId(null);
+    }
+  });
+
+  const loadImageFile = (f: File | undefined): void => {
+    if (!f) {
+      return;
+    }
+    setFile(f);
+    setResultUrl(null);
+    setError(null);
+    const url = URL.createObjectURL(f);
     const img = new Image();
     img.onload = () => {
       setImage({
         src: url,
-        name: file.name,
+        name: f.name,
         width: img.naturalWidth,
         height: img.naturalHeight,
-        size: (file.size / 1024).toFixed(1),
+        size: (f.size / 1024).toFixed(1),
       });
     };
     img.src = url;
+  };
+
+  const handleUpscale = async (): Promise<void> => {
+    if (!file) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { jobId: id } = await uploadImage(file, scale);
+      setJobId(id);
+    } catch {
+      setError("Upload failed. Please try again.");
+      setIsLoading(false);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -60,20 +95,17 @@ export default function Upscaler() {
 
   const handleDragLeave = (): void => setIsDragging(false);
 
-  const handleUpscale = async (): Promise<void> => {
-    setIsLoading(true);
-    try {
-      // TODO: replace with real backend call
-      // const formData = new FormData();
-      // formData.append("image", file);
-      // formData.append("scale", String(scale));
-      // const res = await fetch("/api/upscale", { method: "POST", body: formData });
-      await new Promise<void>((r) => setTimeout(r, 1800)); // mock delay
-      alert(`Upscale x${scale} — backend request`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  async function downloadFile(url: string) {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = `${file?.name.split(".")[0]}_upscaled.png`;
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(blobUrl);
+  }
 
   return (
     <div className="min-h-screen bg-base-200 flex flex-col items-center justify-center px-4 py-4">
@@ -87,12 +119,13 @@ export default function Upscaler() {
         </p>
       </div>
 
+      {/* Controls */}
       <div className="w-full max-w-lg flex flex-col gap-5">
         {/* Upload zone */}
         <div
           className={`border-2 border-dashed rounded-2xl flex flex-col items-center justify-center gap-3 cursor-pointer transition-all select-none
-            ${image ? "min-h-18" : "min-h-50"}
-            ${isDragging ? "border-primary bg-primary/5" : "border-base-content/20 hover:border-base-content/40"}`}
+        ${image ? "min-h-18" : "min-h-50"}
+        ${isDragging ? "border-primary bg-primary/5" : "border-base-content/20 hover:border-base-content/40"}`}
           onClick={() => fileInputRef.current?.click()}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
@@ -147,6 +180,7 @@ export default function Upscaler() {
             </div>
           )}
         </div>
+
         <input
           ref={fileInputRef}
           type="file"
@@ -155,29 +189,7 @@ export default function Upscaler() {
           onChange={handleFileChange}
         />
 
-        {/* Preview */}
-        {image && (
-          <div className="flex flex-col items-center gap-3 bg-base-100 rounded-2xl p-4 border border-base-content/10">
-            <img
-              src={image.src}
-              alt="preview"
-              className="max-h-95 w-full object-contain rounded-xl"
-            />
-            <div className="flex gap-4 text-xs uppercase tracking-widest opacity-50">
-              <span>
-                {image.width} x {image.height}px
-              </span>
-              <span>·</span>
-              <span>{image.size} KB</span>
-              <span>·</span>
-              <span>
-                → {image.width * scale} × {image.height * scale}px
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Scale buttons + Upscale */}
+        {/* Scale + Upscale button */}
         {image && (
           <>
             <div className="flex gap-3">
@@ -203,12 +215,68 @@ export default function Upscaler() {
                   processing...
                 </>
               ) : (
-                `upscale ×${scale}`
+                `upscale x${scale}`
               )}
             </button>
+
+            {error && <div className="alert alert-error text-sm">{error}</div>}
+
+            {resultUrl && (
+              <button
+                onClick={() => downloadFile(resultUrl)}
+                className="btn btn-outline w-full uppercase tracking-widest"
+              >
+                download
+              </button>
+            )}
           </>
         )}
       </div>
+
+      {image && (
+        <div
+          className="w-full mt-5 transition-all"
+          style={{ maxWidth: resultUrl ? "860px" : "512px" }}
+        >
+          <div className="flex flex-col items-center gap-3 bg-base-100 rounded-2xl p-4 border border-base-content/10">
+            <div className="flex gap-4 w-full h-80">
+              <div className="flex-1 flex flex-col gap-2">
+                <img
+                  src={image.src}
+                  alt="original"
+                  className="w-full h-full object-contain rounded-xl"
+                />
+                <span className="text-xs uppercase tracking-widest opacity-40 text-center">
+                  original
+                </span>
+              </div>
+              {resultUrl && (
+                <div className="flex-1 flex flex-col gap-2">
+                  <img
+                    src={resultUrl}
+                    alt="upscaled"
+                    className="w-full h-full object-contain rounded-xl"
+                  />
+                  <span className="text-xs uppercase tracking-widest opacity-40 text-center">
+                    upscaled
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className="flex gap-4 text-xs uppercase tracking-widest opacity-50">
+              <span>
+                {image.width} x {image.height}px
+              </span>
+              <span>·</span>
+              <span>{image.size} KB</span>
+              <span>·</span>
+              <span>
+                → {image.width * scale} × {image.height * scale}px
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

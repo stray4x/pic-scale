@@ -1,6 +1,7 @@
 export const env = {
   NODE_ENV: 'NODE_ENV',
   APP_PORT: 'APP_PORT',
+  FRONTEND_URL: 'FRONTEND_URL',
 
   DB_HOST: 'DB_HOST',
   DB_PORT: 'DB_PORT',

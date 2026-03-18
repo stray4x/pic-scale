@@ -13,6 +13,11 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe());
 
+  app.enableCors({
+    origin: config.get<string>(env.FRONTEND_URL) ?? 'http://localhost:5173',
+    credentials: true,
+  });
+
   await app.listen(config.get(env.APP_PORT) ?? 3000);
 }
 void bootstrap();
