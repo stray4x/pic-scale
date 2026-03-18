@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { uploadImage } from "../api/api";
 import { useJobSocket, type JobUpdate } from "../hooks/useJobSocket";
+import { ImagePreview } from "./ImagePreview";
 
 interface ImageInfo {
   src: string;
@@ -28,12 +29,14 @@ export default function Upscaler() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [jobId, setJobId] = useState<string | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
+  const [resultScale, setResultScale] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useJobSocket(jobId, (update: JobUpdate) => {
     if (update.status === "done" && update.resultUrl) {
       setResultUrl(update.resultUrl);
+      setResultScale(scale);
       setIsLoading(false);
       setJobId(null);
     } else if (update.status === "failed") {
@@ -49,6 +52,7 @@ export default function Upscaler() {
     }
     setFile(f);
     setResultUrl(null);
+    setResultScale(null);
     setError(null);
     const url = URL.createObjectURL(f);
     const img = new Image();
@@ -101,7 +105,7 @@ export default function Upscaler() {
     const blobUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = blobUrl;
-    a.download = `${file?.name.split(".")[0]}_upscaled.png`;
+    a.download = `${file?.name.split(".")[0]}_upscaled_x${resultScale}.png`;
     a.click();
     a.remove();
     URL.revokeObjectURL(blobUrl);
@@ -189,7 +193,6 @@ export default function Upscaler() {
           onChange={handleFileChange}
         />
 
-        {/* Scale + Upscale button */}
         {image && (
           <>
             <div className="flex gap-3">
@@ -231,52 +234,26 @@ export default function Upscaler() {
             )}
           </>
         )}
-      </div>
+        {image && (
+          <div className="w-full mt-5" style={{ maxWidth: "860px" }}>
+            <div className="flex flex-col gap-3 bg-base-100 rounded-2xl p-4 border border-base-content/10">
+              <ImagePreview original={image.src} result={resultUrl} />
 
-      {image && (
-        <div
-          className="w-full mt-5 transition-all"
-          style={{ maxWidth: resultUrl ? "860px" : "512px" }}
-        >
-          <div className="flex flex-col items-center gap-3 bg-base-100 rounded-2xl p-4 border border-base-content/10">
-            <div className="flex gap-4 w-full h-80">
-              <div className="flex-1 flex flex-col gap-2">
-                <img
-                  src={image.src}
-                  alt="original"
-                  className="w-full h-full object-contain rounded-xl"
-                />
-                <span className="text-xs uppercase tracking-widest opacity-40 text-center">
-                  original
+              <div className="flex gap-4 text-xs uppercase tracking-widest opacity-50 justify-center">
+                <span>
+                  {image.width} x {image.height}px
+                </span>
+                <span>·</span>
+                <span>{image.size} KB</span>
+                <span>·</span>
+                <span>
+                  → {image.width * scale} × {image.height * scale}px
                 </span>
               </div>
-              {resultUrl && (
-                <div className="flex-1 flex flex-col gap-2">
-                  <img
-                    src={resultUrl}
-                    alt="upscaled"
-                    className="w-full h-full object-contain rounded-xl"
-                  />
-                  <span className="text-xs uppercase tracking-widest opacity-40 text-center">
-                    upscaled
-                  </span>
-                </div>
-              )}
-            </div>
-            <div className="flex gap-4 text-xs uppercase tracking-widest opacity-50">
-              <span>
-                {image.width} x {image.height}px
-              </span>
-              <span>·</span>
-              <span>{image.size} KB</span>
-              <span>·</span>
-              <span>
-                → {image.width * scale} × {image.height * scale}px
-              </span>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
