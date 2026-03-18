@@ -3,8 +3,8 @@ import numpy as np
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import Response
 from PIL import Image
-from realesrgan import RealESRGANer
-from basicsr.archs.rrdbnet_arch import RRDBNet
+from realesrgan import RealESRGANer  # type: ignore
+from basicsr.archs.rrdbnet_arch import RRDBNet  # type: ignore
 
 app = FastAPI()
 
