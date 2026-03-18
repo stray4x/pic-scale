@@ -52,6 +52,14 @@ services:
       - '9001:9001'
     volumes:
       - minio_data:/data
+  upscaler:
+    build:
+      context: ./services/upscaler
+      dockerfile: Dockerfile
+    container_name: pic-scale-upscaler
+    restart: unless-stopped
+    ports:
+      - '8000:8000'
 
 volumes:
   postgres_data:
