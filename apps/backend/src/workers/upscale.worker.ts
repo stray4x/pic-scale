@@ -7,6 +7,7 @@ import { UPSCALER_PORT, type UpscalerPort } from '../ports/upscaler.port';
 import { JobStatus } from '../modules/job/entities/job.entity';
 import { randomUUID } from 'crypto';
 import { queues } from 'src/common/constants/queues';
+import { JobNotificationGateway } from 'src/modules/job-notifications/job-notifications.gateway';
 
 interface UpscaleJobPayload {
   jobId: string;
@@ -21,6 +22,7 @@ export class UpscaleWorker extends WorkerHost {
     private readonly jobService: JobService,
     @Inject(STORAGE_PORT) private readonly storage: StoragePort,
     @Inject(UPSCALER_PORT) private readonly upscaler: UpscalerPort,
+    private readonly notifications: JobNotificationGateway,
   ) {
     super();
   }
@@ -30,6 +32,7 @@ export class UpscaleWorker extends WorkerHost {
     this.logger.log(`Processing job ${jobId} with scale x${scale}`);
 
     await this.jobService.updateStatus(jobId, JobStatus.PROCESSING);
+    this.notifications.emitJobUpdate(jobId, { status: JobStatus.PROCESSING });
 
     try {
       const jobEntity = await this.jobService.findById(jobId);
@@ -43,9 +46,15 @@ export class UpscaleWorker extends WorkerHost {
       const outputBuffer = await this.upscaler.upscale(inputBuffer, scale);
 
       const resultKey = `results/${randomUUID()}.png`;
+      const resultUrl = await this.storage.getPresignedUrl(resultKey);
+
       await this.storage.upload(outputBuffer, resultKey, 'image/png');
 
       await this.jobService.updateStatus(jobId, JobStatus.DONE, resultKey);
+      this.notifications.emitJobUpdate(jobId, {
+        status: JobStatus.DONE,
+        resultUrl,
+      });
 
       this.logger.log(`Job ${jobId} done`);
     } catch (error) {
@@ -57,6 +66,11 @@ export class UpscaleWorker extends WorkerHost {
         undefined,
         error.message,
       );
+
+      this.notifications.emitJobUpdate(jobId, {
+        status: JobStatus.FAILED,
+        errorMessage: error.message,
+      });
 
       throw error;
     }

@@ -11,6 +11,7 @@ import { bullMqConfig } from 'src/config/bullmq.config';
 import { StorageModule } from './storage/storage.module';
 import { UpscalerModule } from './upscaler/upscaler.module';
 import { UpscaleWorker } from 'src/workers/upscale.worker';
+import { JobNotificationsModule } from './job-notifications/job-notifications.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { UpscaleWorker } from 'src/workers/upscale.worker';
     UploadModule,
     StorageModule,
     UpscalerModule,
+    JobNotificationsModule,
   ],
   controllers: [AppController],
   providers: [UpscaleWorker],
